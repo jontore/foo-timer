@@ -1,0 +1,105 @@
+<template>
+  <style>
+    .svg.radial-progress {
+      position: relative;
+      display: inline-block;
+    }
+
+    svg {
+      transform: rotate(270deg);
+    }
+
+    circle {
+      fill: transparent;
+      transform: rotate(0.1deg); // to fix Firefox
+    }
+
+    .radial-progress-background {
+      stroke: orange;
+    }
+
+    .radial-progress-cover {
+      stroke: #DEDEDE;
+    }
+
+    .radial-progress-center {
+      fill: #CCC;
+    }
+
+    .radial-fill {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+    <div class="svg radial-progress">
+      <svg height="10em" width="10em">
+        <circle class="radial-progress-background" fill="transparent" ></circle>
+        <circle class="radial-progress-cover" fill="transparent"></circle>
+        <circle class="radial-progress-center" fill="transparent"></circle>
+      </svg>
+    </div>
+</template>
+
+<script>
+  (function () {
+    'use strict';
+    var importdoc = document.currentScript.ownerDocument;
+    var FooTimerPrototype = Object.create(HTMLElement.prototype);
+
+    var template = importdoc.querySelector('template').content;
+
+    FooTimerPrototype.createdCallback = function () {
+      this.radius = parseInt(this.getAttribute('r'), 10);
+      this.circumference = 2 * this.radius * Math.PI;
+      this.max = parseInt(this.getAttribute('max'), 10) || 100;
+      this.step = parseInt(this.getAttribute('step'), 10) || 1;
+      this.strokeWidth = parseInt(this.getAttribute('stroke-width'), 10) || 2;
+
+      var els = template.querySelectorAll('circle');
+      Array.prototype.forEach.call(els, function (el) {
+        el.setAttribute('cx', this.radius + this.strokeWidth/2 + 'em')
+        el.setAttribute('cy', this.radius + this.strokeWidth/2 + 'em')
+        el.setAttribute('stroke-dasharray', this.circumference + 'em');
+        el.setAttribute('stroke-width', this.strokeWidth + 'em');
+        el.setAttribute('r', this.radius + 'em');
+      }.bind(this));
+
+      template.querySelector('.radial-progress-center').setAttribute('r', (this.radius - 0.01 + 'em'));
+      template.querySelector('svg').setAttribute('width', (this.radius * 2) + this.strokeWidth + 'em');
+      template.querySelector('svg').setAttribute('height', (this.radius * 2) + this.strokeWidth + 'em');
+
+      var root = this.createShadowRoot();
+      root.appendChild(document.importNode(template, true));
+
+      this.radialCover = root.querySelector('.radial-progress-cover');
+    };
+
+    FooTimerPrototype.tick = function (value) {
+      var offset = -this.circumference * value + 'em';
+
+      this.radialCover.setAttribute('stroke-dashoffset', offset);
+    };
+
+    FooTimerPrototype.start = function () {
+      this.value = 0;
+
+      var intervalId = setInterval(function () {
+        if (this.value > this.max) {
+          clearInterval(intervalId);
+          return;
+        }
+
+        this.tick(this.value / this.max);
+
+        this.value += this.step;
+      }.bind(this), 1000);
+    };
+
+    document.registerElement('foo-timer', {
+      prototype: FooTimerPrototype
+    });
+
+  })();
+</script>

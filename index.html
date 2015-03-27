@@ -1,0 +1,20 @@
+<head>
+  <style>
+    body {
+      font-size: 16px;
+    }
+  </style>
+  <link rel="import" href="./foo_timer.html">
+</head>
+
+<body>
+  <foo-timer type="circle" max=100 step=10 r=3 stroke-width=2>
+  </foo-timer>
+  <script>
+    var timers = document.querySelectorAll('foo-timer');
+
+    [].forEach.call(timers, function (timer) {
+      timer.start();
+    })
+  </script>
+</body>
